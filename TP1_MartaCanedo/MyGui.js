@@ -20,7 +20,7 @@ export class MyGui {
       switchCamera: () => this.switchCamera(),
       toggleTrackballControls: this.webgl.trackballControls.enabled,
       toggleOrbitControlsAutoRotate: this.orbitControlsAutoRotateEnabled,
-      toggleFirstPersonControls: this.webgl.firstPersonControls.enabled, // Adicione uma variável para controlar os controles de primeira pessoa
+      toggleFirstPersonControls: this.webgl.firstPersonControls.enabled,
     };
 
     gui.add(guiVars, 'toggleTrackballControls').name('Trackball Controls').onChange(value => {
@@ -29,12 +29,11 @@ export class MyGui {
 
     gui.add(guiVars, 'toggleOrbitControlsAutoRotate').name('Orbit Auto Rotate').onChange(value => {
       this.orbitControlsAutoRotateEnabled = value;
-      this.webgl.setOrbitControlsAutoRotate(value); // Chamada do método para definir o estado da rotação automática
+      this.webgl.setOrbitControlsAutoRotate(value);
     });
 
     gui.add(guiVars, 'toggleFirstPersonControls').name('First Person Controls').onChange(value => {
-      this.webgl.firstPersonControls.enabled = value; // Ative ou desative os controles de primeira pessoa
-
+      this.webgl.firstPersonControls.enabled = value;
     });
 
     gui.add(guiVars, 'drawBox').name('Draw Box');
@@ -64,16 +63,20 @@ export class MyGui {
       this.webgl.camera.position.set(0, 0, 5000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Orthographic';
+      this.webgl.updateFirstPersonControls();
     } else {
       this.webgl.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 300, 10000);
       this.webgl.camera.position.set(0, 0, 2000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Perspective';
+      this.webgl.updateFirstPersonControls();
     }
 
+    // Atualizar as referências dos controles da câmera
     this.webgl.trackballControls.object = this.webgl.camera;
     this.webgl.orbitControls.object = this.webgl.camera;
     this.webgl.firstPersonControls.object = this.webgl.camera;
-
   }
+
+  
 }
