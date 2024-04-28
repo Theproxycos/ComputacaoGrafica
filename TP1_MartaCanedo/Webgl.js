@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import { FlyControls }       from 'three/addons/controls/FlyControls.js';
 
 export class Webgl {
   constructor() {
@@ -17,7 +18,7 @@ export class Webgl {
     this.scene.background = new THREE.Color(0x555555);
 
     // Initialize with perspective camera
-    this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 300, 5000);
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 300, 5000);
     this.camera.position.set(0, 0, 2000);
     this.camera.lookAt(this.scene.position);
 
@@ -39,25 +40,27 @@ export class Webgl {
     this.setOrbitControlsAutoRotate = (value) => {
       this.orbitControls.autoRotate = value;
     };
+    
+    // Setup first fly controls
+    this.flyControls = this.setupFlyControls();
   }
 
   setupFirstPersonControls() {
+
     const firstPersonControls = new FirstPersonControls(this.camera, this.renderer.domElement);
 
+    firstPersonControls.lookAt(new THREE.Vector3(0,0,0));
     
-    firstPersonControls.movementSpeed = 100; // Ajuste conforme necessário
-    firstPersonControls.lookSpeed = 0.1; // Ajuste conforme necessário
-    
+    //firstPersonControls.activeLook = false;
+    firstPersonControls.lookSpeed = 0.1;
+    firstPersonControls.movementSpeed = 100;
     firstPersonControls.noFly = true;
     firstPersonControls.lookVertical = true;
     firstPersonControls.constrainVertical = true;
-    firstPersonControls.verticalMin = -Math.PI / 2; // Ângulo mínimo vertical
-    firstPersonControls.verticalMax = Math.PI / 2; // Ângulo máximo vertical
-    
-    firstPersonControls.lon = 0; // Rotação horizontal inicial
-    firstPersonControls.lat = 0; // Rotação vertical inicial
-
-    
+    firstPersonControls.verticalMin = 1.0;
+    firstPersonControls.verticalMax = 2.0;
+    firstPersonControls.lon = 150;
+    firstPersonControls.lat = -120;
 
     return firstPersonControls;
   }
@@ -71,6 +74,7 @@ export class Webgl {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     this.firstPersonControls.handleResize();
+    this.flyControls.handleResize();
   }
 
   disposeFirstPersonControls() {
@@ -85,17 +89,30 @@ export class Webgl {
     this.disposeFirstPersonControls();
   }
 
+  setupFlyControls(){
+    const flyControls = new FlyControls(this.camera, this.renderer.domElement);
+
+    flyControls.movementSpeed = 50;
+    flyControls.rollSpeed = Math.PI / 24;
+    flyControls.autoForward = true;
+    flyControls.dragToLook = false;
+
+    return flyControls;
+  }
+
+
+
+
   render() {
     const delta = this.clock.getDelta();
     if (this.trackballControls.enabled) {
-      this.trackballControls.update(delta);
+        this.trackballControls.update(delta);
     } else if (this.orbitControls.autoRotate) {
-      this.orbitControls.update(delta);
+        this.orbitControls.update(delta);
     } else if (this.firstPersonControls.enabled) {
-      this.firstPersonControls.update(delta);
-      // Adicione a renderização da cena aqui quando os controles de primeira pessoa estiverem ativados
-      this.renderer.render(this.scene, this.camera);
-      return; // Retorne para evitar a renderização duplicada
+        this.firstPersonControls.update(delta);
+    } else if (this.flyControls.enabled) {
+        this.flyControls.update(delta);
     }
     this.renderer.render(this.scene, this.camera);
   }

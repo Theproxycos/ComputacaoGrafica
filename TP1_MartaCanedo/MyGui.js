@@ -1,6 +1,7 @@
 // MyGui.js
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { Box } from './Models.js';
+import { Estante } from './Models.js';
 import * as THREE from 'three';
 
 export class MyGui {
@@ -16,11 +17,13 @@ export class MyGui {
   setupGui(gui) {
     const guiVars = {
       drawBox: () => this.drawBox(),
+      drawEstante: () => this.drawEstante(),
       cleanScene: () => this.cleanScene(),
       switchCamera: () => this.switchCamera(),
       toggleTrackballControls: this.webgl.trackballControls.enabled,
       toggleOrbitControlsAutoRotate: this.orbitControlsAutoRotateEnabled,
       toggleFirstPersonControls: this.webgl.firstPersonControls.enabled,
+      toggleFlyControls: this.webgl.flyControls.enabled,
     };
 
     gui.add(guiVars, 'toggleTrackballControls').name('Trackball Controls').onChange(value => {
@@ -36,7 +39,12 @@ export class MyGui {
       this.webgl.firstPersonControls.enabled = value;
     });
 
+    gui.add(guiVars, 'toggleFlyControls').name('Fly Controls').onChange(value => {
+      this.webgl.flyControls.enabled = value;
+    });
+
     gui.add(guiVars, 'drawBox').name('Draw Box');
+    gui.add(guiVars, 'drawEstante').name('Draw Estante');
     gui.add(guiVars, 'cleanScene').name('Clean Scene');
     gui.add(guiVars, 'switchCamera').name('Switch Camera');
     gui.add(this, 'cameraTypeText').name('Camera Type').listen();
@@ -55,6 +63,13 @@ export class MyGui {
     this.webgl.scene.add(new THREE.AxesHelper(50));
   }
 
+  drawEstante() {
+    this.cleanScene();
+    const estante = new Estante(400, 600, 200, 150, 100, 150, 5);
+    this.webgl.scene.add(estante);
+    this.webgl.scene.add(new THREE.AxesHelper(50));
+  }
+
   switchCamera() {
     if (this.webgl.camera instanceof THREE.PerspectiveCamera) {
       this.webgl.camera = new THREE.OrthographicCamera(-300, 500, 400, -400, 0.1, 10000);
@@ -64,18 +79,21 @@ export class MyGui {
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Orthographic';
       this.webgl.updateFirstPersonControls();
+      this.webgl.updateFlyControls();
     } else {
       this.webgl.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 300, 10000);
       this.webgl.camera.position.set(0, 0, 2000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Perspective';
       this.webgl.updateFirstPersonControls();
+      this.webgl.updateFlyControls();
     }
 
     // Atualizar as referências dos controles da câmera
     this.webgl.trackballControls.object = this.webgl.camera;
     this.webgl.orbitControls.object = this.webgl.camera;
     this.webgl.firstPersonControls.object = this.webgl.camera;
+    this.webgl.flyControls.object = this.webgl.camera;
   }
 
   
