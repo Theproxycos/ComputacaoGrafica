@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import * as SceneUtils from 'three/addons/utils/SceneUtils.js';
+
 
 export class Box extends THREE.Object3D {
   constructor(width, height, depth, thickness) {
@@ -31,51 +33,81 @@ export class Box extends THREE.Object3D {
 }
 
 export class Estante extends THREE.Object3D {
-  constructor(width, height, depth, boxWidth, boxHeight, boxDepth, boxThickness) {
+  constructor(lp, ep, ap, lt, et, at) {
     super();
 
-    const numFloors = 3;
-    const inclination = Math.PI / 6; // Ângulo de inclinação dos andares em radianos
-    const gapBetweenBoxes = 20; // Espaço vazio entre as caixas e as bordas da estante
+    const pae = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna anterior esquerda
+    pae.translateX(lp / 2);
+    pae.translateY(ap / 2);
+    pae.translateZ(-ep / 2);
+    pae.add(new THREE.AxesHelper(10));
 
-    // Criação da estrutura da estante
-    const structureMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
-    const supportGeometry = new THREE.BoxGeometry(10, height, depth);
-    const leftSupport = new THREE.Mesh(supportGeometry, structureMaterial);
-    const rightSupport = new THREE.Mesh(supportGeometry, structureMaterial);
-    leftSupport.position.set(-width / 2, 0, 0);
-    rightSupport.position.set(width / 2, 0, 0);
-    this.add(leftSupport);
-    this.add(rightSupport);
+    const pad = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna anterior direita
+    pad.translateX(lp / 2 + lt - lp);
+    pad.translateY(ap / 2);
+    pad.translateZ(-ep / 2);
+    pad.add(new THREE.AxesHelper(10));
 
-    // Adiciona os andares inclinados
-    for (let i = 0; i < numFloors; i++) {
-      const floor = this.createInclinedFloor(width, height, depth, inclination, i * (height / numFloors), gapBetweenBoxes);
-      this.add(floor);
-    }
+    const ppe = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna posterior esquerda
+    ppe.translateX(lp / 2);
+    ppe.translateY(ap / 2);
+    ppe.translateZ(-ep / 2 - et + ep);
+    ppe.add(new THREE.AxesHelper(10));
 
-    // Adiciona caixas em cada andar
-    for (let i = 0; i < numFloors; i++) {
-      const boxPosY = i * (height / numFloors) + gapBetweenBoxes / 2; // Posição Y da caixa
-      const box1PosX = -width / 4; // Posição X da primeira caixa em cada andar
-      const box2PosX = width / 4 - boxWidth; // Posição X da segunda caixa em cada andar
+    const ppd = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna posterior esquerda
+    ppd.translateX(lp / 2 + lt - lp);
+    ppd.translateY(ap / 2);
+    ppd.translateZ(-ep / 2 - et + ep);
+    ppd.add(new THREE.AxesHelper(10));
 
-      const box1 = new Box(boxWidth, boxHeight, boxDepth, boxThickness);
-      box1.position.set(box1PosX, boxPosY, depth / 2 - boxThickness / 2);
-      const box2 = new Box(boxWidth, boxHeight, boxDepth, boxThickness);
-      box2.position.set(box2PosX, boxPosY, -depth / 2 + boxThickness / 2);
+    const tampo1 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
+    tampo1.translateX(lt / 2);
+    tampo1.translateY(at / 2 + ap / 8);
+    tampo1.translateZ(-et / 2);
 
-      this.add(box1);
-      this.add(box2);
-    }
+    const angleRadians1 = Math.PI / 12; // Por exemplo, 45 graus
+    const angleRadians2 = Math.PI / -12;
+    const angleRadians3 = Math.PI / 12;
+
+    const axisX = new THREE.Vector3(1, 0, 0); // Eixo X
+
+    tampo1.rotateOnAxis(axisX, angleRadians1);
+    tampo1.add(new THREE.AxesHelper(10));
+
+    const tampo2 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
+    tampo2.translateX(lt / 2);
+    tampo2.translateY(at / 2 + ap / 2);
+    tampo2.translateZ(-et / 2);
+    
+    tampo2.rotateOnAxis(axisX, angleRadians2);
+    tampo2.add(new THREE.AxesHelper(10));
+
+    const tampo3 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
+    tampo3.translateX(lt / 2);
+    tampo3.translateY(at / 2 + ap - 100 );
+    tampo3.translateZ(-et / 2);
+
+    tampo3.rotateOnAxis(axisX, angleRadians3);
+    tampo3.add(new THREE.AxesHelper(10));
+
+    this.add(pae);
+    this.add(pad);
+    this.add(ppe);
+    this.add(ppd);
+    this.add(tampo1);
+    this.add(tampo2);
+    this.add(tampo3);
   }
+  createMesh(geom, color) {
+    // assign two materials
+    const meshMaterial = new THREE.MeshNormalMaterial();
+    meshMaterial.side = THREE.DoubleSide;
+    const wireFrameMat = new THREE.MeshBasicMaterial({ color: color, wireframe: false });
+    wireFrameMat.wireframe = false;
 
-  createInclinedFloor(width, height, depth, inclination, posY, gapBetweenBoxes) {
-    const geometry = new THREE.PlaneGeometry(width, depth);
-    const material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
-    const floor = new THREE.Mesh(geometry, material);
-    floor.rotation.x = inclination;
-    floor.position.y = posY - height / 2 + gapBetweenBoxes / 2;
-    return floor;
+    // create a multimaterial
+    const mesh = SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+
+    return mesh;
   }
 }

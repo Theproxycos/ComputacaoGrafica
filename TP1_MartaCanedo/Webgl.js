@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
-import { FlyControls }       from 'three/addons/controls/FlyControls.js';
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
 
 export class Webgl {
   constructor() {
@@ -22,47 +22,111 @@ export class Webgl {
     this.camera.position.set(0, 0, 2000);
     this.camera.lookAt(this.scene.position);
 
-    // Setup trackball controls
+    this.trackballControls = null;
+    this.orbitControls = null;
+    this.firstPersonControls = null;
+    this.flyControls = null;
+  }
+
+  setupControl(controlName) {
+    switch (controlName) {
+      case 'trackballControls':
+        this.setupTrackballControls();
+        break;
+      case 'orbitControls':
+        this.setupOrbitControls();
+        break;
+      case 'firstPersonControls':
+        this.setupFirstPersonControls();
+        break;
+      case 'flyControls':
+        this.setupFlyControls();
+        break;
+      default:
+        break;
+    }
+  }
+
+  disposeControl(controlName) {
+    switch (controlName) {
+      case 'trackballControls':
+        this.disposeTrackballControls();
+        break;
+      case 'orbitControls':
+        this.disposeOrbitControls();
+        break;
+      case 'firstPersonControls':
+        this.disposeFirstPersonControls();
+        break;
+      case 'flyControls':
+        this.disposeFlyControls();
+        break;
+      default:
+        break;
+    }
+  }
+
+  setupTrackballControls() {
     this.trackballControls = new TrackballControls(this.camera, this.renderer.domElement);
     this.trackballControls.rotateSpeed = 5.0;
     this.trackballControls.zoomSpeed = 1.0;
     this.trackballControls.panSpeed = 1.0;
     this.trackballControls.staticMoving = true;
+  }
 
-    // Setup orbit controls
+  setupOrbitControls() {
     this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbitControls.autoRotate = true;
-
-    // Setup first person controls
-    this.firstPersonControls = this.setupFirstPersonControls();
-
-    // Atualizar os controles da primeira pessoa na troca de câmera
-    this.setOrbitControlsAutoRotate = (value) => {
-      this.orbitControls.autoRotate = value;
-    };
-    
-    // Setup first fly controls
-    this.flyControls = this.setupFlyControls();
   }
 
   setupFirstPersonControls() {
+    this.firstPersonControls = new FirstPersonControls(this.camera, this.renderer.domElement);
+    this.firstPersonControls.lookAt(new THREE.Vector3(0, 0, 0));
+    this.firstPersonControls.lookSpeed = 0.1;
+    this.firstPersonControls.movementSpeed = 100;
+    this.firstPersonControls.noFly = true;
+    this.firstPersonControls.lookVertical = true;
+    this.firstPersonControls.constrainVertical = true;
+    this.firstPersonControls.verticalMin = 1.0;
+    this.firstPersonControls.verticalMax = 2.0;
+    this.firstPersonControls.lon = 150;
+    this.firstPersonControls.lat = -120;
+  }
 
-    const firstPersonControls = new FirstPersonControls(this.camera, this.renderer.domElement);
+  setupFlyControls() {
+    this.flyControls = new FlyControls(this.camera, this.renderer.domElement);
+    this.flyControls.movementSpeed = 250;
+    this.flyControls.rollSpeed = Math.PI / 24;
+    this.flyControls.autoForward = false;
+    this.flyControls.dragToLook = true;
+  }
 
-    firstPersonControls.lookAt(new THREE.Vector3(0,0,0));
-    
-    //firstPersonControls.activeLook = false;
-    firstPersonControls.lookSpeed = 0.1;
-    firstPersonControls.movementSpeed = 100;
-    firstPersonControls.noFly = true;
-    firstPersonControls.lookVertical = true;
-    firstPersonControls.constrainVertical = true;
-    firstPersonControls.verticalMin = 1.0;
-    firstPersonControls.verticalMax = 2.0;
-    firstPersonControls.lon = 150;
-    firstPersonControls.lat = -120;
+  disposeTrackballControls() {
+    if (this.trackballControls) {
+      this.trackballControls.dispose();
+      this.trackballControls = null;
+    }
+  }
 
-    return firstPersonControls;
+  disposeFirstPersonControls() {
+    if (this.firstPersonControls) {
+      this.firstPersonControls.dispose();
+      this.firstPersonControls = null;
+    }
+  }
+
+  disposeOrbitControls() {
+    if (this.orbitControls) {
+      this.orbitControls.dispose();
+      this.orbitControls = null;
+    }
+  }
+
+  disposeFlyControls() {
+    if (this.flyControls) {
+      this.flyControls.dispose();
+      this.flyControls = null;
+    }
   }
 
   onWindowResize() {
@@ -73,46 +137,24 @@ export class Webgl {
 
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    this.firstPersonControls.handleResize();
-    this.flyControls.handleResize();
+    if (this.firstPersonControls) {
+      this.firstPersonControls.handleResize();
+    }
+    if (this.flyControls) {
+      this.flyControls.handleResize();
+    }
   }
-
-  disposeFirstPersonControls() {
-    this.firstPersonControls.dispose();
-
-    // Configurar novos controles de primeira pessoa com a câmera atualizada
-  this.firstPersonControls = this.setupFirstPersonControls();
-  }
-
-  updateFirstPersonControls() {
-    // Descartar os controles de primeira pessoa existentes
-    this.disposeFirstPersonControls();
-  }
-
-  setupFlyControls(){
-    const flyControls = new FlyControls(this.camera, this.renderer.domElement);
-
-    flyControls.movementSpeed = 50;
-    flyControls.rollSpeed = Math.PI / 24;
-    flyControls.autoForward = true;
-    flyControls.dragToLook = false;
-
-    return flyControls;
-  }
-
-
-
 
   render() {
     const delta = this.clock.getDelta();
-    if (this.trackballControls.enabled) {
-        this.trackballControls.update(delta);
-    } else if (this.orbitControls.autoRotate) {
-        this.orbitControls.update(delta);
-    } else if (this.firstPersonControls.enabled) {
-        this.firstPersonControls.update(delta);
-    } else if (this.flyControls.enabled) {
-        this.flyControls.update(delta);
+    if (this.trackballControls) {
+      this.trackballControls.update(delta);
+    } else if (this.orbitControls) {
+      this.orbitControls.update(delta);
+    } else if (this.firstPersonControls) {
+      this.firstPersonControls.update(delta);
+    } else if (this.flyControls) {
+      this.flyControls.update(delta);
     }
     this.renderer.render(this.scene, this.camera);
   }
