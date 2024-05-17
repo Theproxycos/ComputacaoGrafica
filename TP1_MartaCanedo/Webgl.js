@@ -5,6 +5,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 
+
+
 export class Webgl {
   constructor() {
     this.clock = new THREE.Clock();
@@ -12,15 +14,21 @@ export class Webgl {
     const canvas = document.querySelector('#WebGL-canvas');
     this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
     this.renderer.useLegacyLights = true;
+    this.renderer.shadowMap.enabled = true;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x555555);
 
-    // Initialize with perspective camera
+    // Inicializa a câmera em perspetiva
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 300, 5000);
-    this.camera.position.set(0, 0, 2000);
+    this.camera.position.set(0, 0, 5000);
     this.camera.lookAt(this.scene.position);
+
+    this.animateRobot = false; // Flag para controlar a animação do robô
+    this.robot = null; // Referência ao robô
+
+    this.animate();
 
     this.trackballControls = null;
     this.orbitControls = null;
@@ -28,6 +36,7 @@ export class Webgl {
     this.flyControls = null;
   }
 
+  //Configuração dos controlos especificados
   setupControl(controlName) {
     switch (controlName) {
       case 'trackballControls':
@@ -47,6 +56,7 @@ export class Webgl {
     }
   }
 
+  // Eliminação dos controlos especificados
   disposeControl(controlName) {
     switch (controlName) {
       case 'trackballControls':
@@ -66,6 +76,7 @@ export class Webgl {
     }
   }
 
+  //Setup dos controlos do trackball
   setupTrackballControls() {
     this.trackballControls = new TrackballControls(this.camera, this.renderer.domElement);
     this.trackballControls.rotateSpeed = 5.0;
@@ -74,11 +85,13 @@ export class Webgl {
     this.trackballControls.staticMoving = true;
   }
 
+  //Setup dos controlos do orbit
   setupOrbitControls() {
     this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbitControls.autoRotate = true;
   }
 
+  //Setup dos controlos do first person
   setupFirstPersonControls() {
     this.firstPersonControls = new FirstPersonControls(this.camera, this.renderer.domElement);
     this.firstPersonControls.lookAt(new THREE.Vector3(0, 0, 0));
@@ -93,6 +106,7 @@ export class Webgl {
     this.firstPersonControls.lat = -120;
   }
 
+  //Setup dos controlos do fly
   setupFlyControls() {
     this.flyControls = new FlyControls(this.camera, this.renderer.domElement);
     this.flyControls.movementSpeed = 250;
@@ -101,13 +115,15 @@ export class Webgl {
     this.flyControls.dragToLook = true;
   }
 
+  //Remoção do controlo trackball
   disposeTrackballControls() {
     if (this.trackballControls) {
       this.trackballControls.dispose();
       this.trackballControls = null;
     }
   }
-
+  
+  //Remoção do controlo first person
   disposeFirstPersonControls() {
     if (this.firstPersonControls) {
       this.firstPersonControls.dispose();
@@ -115,6 +131,7 @@ export class Webgl {
     }
   }
 
+  //Remoção do controlo orbit
   disposeOrbitControls() {
     if (this.orbitControls) {
       this.orbitControls.dispose();
@@ -122,6 +139,7 @@ export class Webgl {
     }
   }
 
+  //Remoção do controlo fly
   disposeFlyControls() {
     if (this.flyControls) {
       this.flyControls.dispose();
@@ -129,6 +147,7 @@ export class Webgl {
     }
   }
 
+  //Redimensionamento da janela
   onWindowResize() {
     const aspect = window.innerWidth / window.innerHeight;
 
@@ -145,6 +164,18 @@ export class Webgl {
     }
   }
 
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    // Verifica se o robô existe e está ativo antes de atualizá-lo
+    if (this.robot && this.animateRobot) {
+      this.robot.position.x = Math.sin(Date.now() * 0.001) * 2900; // Ajuste a amplitude do movimento conforme necessário
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  //Renderização da cena
   render() {
     const delta = this.clock.getDelta();
     if (this.trackballControls) {
@@ -156,6 +187,10 @@ export class Webgl {
     } else if (this.flyControls) {
       this.flyControls.update(delta);
     }
+    if (this.animateRobot && this.robot) {
+      this.robot.animate();
+    }
+    
     this.renderer.render(this.scene, this.camera);
   }
 }

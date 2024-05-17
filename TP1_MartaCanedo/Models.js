@@ -1,6 +1,14 @@
 import * as THREE from 'three';
 import * as SceneUtils from 'three/addons/utils/SceneUtils.js';
 
+// Carregador de texturas
+const textureLoader = new THREE.TextureLoader();
+
+// Carregando as texturas
+const boxTexture = textureLoader.load('Texturas/brown-corrugated-paper-textured-background.jpg');
+const shelfTexture = textureLoader.load('Texturas/grunge-wall-texture.jpg');
+const floorTexture = textureLoader.load('Texturas/floor.jpg');
+const wallTexture = textureLoader.load('Texturas/blank-concrete-white-wall-texture-background.jpg');
 
 export class Box extends THREE.Object3D {
   constructor(width, height, depth, thickness) {
@@ -25,89 +33,165 @@ export class Box extends THREE.Object3D {
 
   createPanel(width, height, depth, posX, posY, posZ) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
+    const material = new THREE.MeshLambertMaterial({ map: boxTexture });
     const panel = new THREE.Mesh(geometry, material);
     panel.position.set(posX, posY, posZ);
+    panel.castShadow = true;
     return panel;
   }
 }
 
 export class Estante extends THREE.Object3D {
-  constructor(lp, ep, ap, lt, et, at) {
+  constructor(largura, altura, profundidade, espessura) {
     super();
 
-    const pae = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna anterior esquerda
-    pae.translateX(lp / 2);
-    pae.translateY(ap / 2);
-    pae.translateZ(-ep / 2);
-    pae.add(new THREE.AxesHelper(10));
+    // Criando os três pisos da estante com as dimensões especificadas
+    const piso1 = this.createPiso(largura, espessura, profundidade, -200, altura / 4, 0);
+    piso1.rotation.set(0, 0, Math.PI / 15); // Rotacionando o primeiro piso
+    this.add(piso1);
+    this.addBoxesToPiso(piso1, 2); // Adicionando duas caixas ao primeiro piso
 
-    const pad = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna anterior direita
-    pad.translateX(lp / 2 + lt - lp);
-    pad.translateY(ap / 2);
-    pad.translateZ(-ep / 2);
-    pad.add(new THREE.AxesHelper(10));
+    const piso2 = this.createPiso(largura, espessura, profundidade, 0, altura / 2, 0);
+    piso2.rotation.set(0, 0, Math.PI / 15); // Rotacionando o segundo piso
+    this.add(piso2);
+    this.addBoxesToPiso(piso2, 2); // Adicionando duas caixas ao segundo piso
 
-    const ppe = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna posterior esquerda
-    ppe.translateX(lp / 2);
-    ppe.translateY(ap / 2);
-    ppe.translateZ(-ep / 2 - et + ep);
-    ppe.add(new THREE.AxesHelper(10));
-
-    const ppd = this.createMesh(new THREE.BoxGeometry(lp, ap, ep, 16, 16, 16), 0xff00ff); // perna posterior esquerda
-    ppd.translateX(lp / 2 + lt - lp);
-    ppd.translateY(ap / 2);
-    ppd.translateZ(-ep / 2 - et + ep);
-    ppd.add(new THREE.AxesHelper(10));
-
-    const tampo1 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
-    tampo1.translateX(lt / 2);
-    tampo1.translateY(at / 2 + ap / 8);
-    tampo1.translateZ(-et / 2);
-
-    const angleRadians1 = Math.PI / 12; // Por exemplo, 45 graus
-    const angleRadians2 = Math.PI / -12;
-    const angleRadians3 = Math.PI / 12;
-
-    const axisX = new THREE.Vector3(1, 0, 0); // Eixo X
-
-    tampo1.rotateOnAxis(axisX, angleRadians1);
-    tampo1.add(new THREE.AxesHelper(10));
-
-    const tampo2 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
-    tampo2.translateX(lt / 2);
-    tampo2.translateY(at / 2 + ap / 2);
-    tampo2.translateZ(-et / 2);
-    
-    tampo2.rotateOnAxis(axisX, angleRadians2);
-    tampo2.add(new THREE.AxesHelper(10));
-
-    const tampo3 = this.createMesh(new THREE.BoxGeometry(lt, at, et, 16, 16, 16), 0x000000); // tampo
-    tampo3.translateX(lt / 2);
-    tampo3.translateY(at / 2 + ap - 100 );
-    tampo3.translateZ(-et / 2);
-
-    tampo3.rotateOnAxis(axisX, angleRadians3);
-    tampo3.add(new THREE.AxesHelper(10));
-
-    this.add(pae);
-    this.add(pad);
-    this.add(ppe);
-    this.add(ppd);
-    this.add(tampo1);
-    this.add(tampo2);
-    this.add(tampo3);
+    const piso3 = this.createPiso(largura, espessura, profundidade, -200, altura * 3 / 4, 0);
+    piso3.rotation.set(0, 0, -Math.PI / 15); // Rotacionando o terceiro piso
+    this.add(piso3);
+    this.addBoxesToPiso(piso3, 2); // Adicionando duas caixas ao terceiro piso
   }
-  createMesh(geom, color) {
-    // assign two materials
-    const meshMaterial = new THREE.MeshNormalMaterial();
-    meshMaterial.side = THREE.DoubleSide;
-    const wireFrameMat = new THREE.MeshBasicMaterial({ color: color, wireframe: false });
-    wireFrameMat.wireframe = false;
 
-    // create a multimaterial
-    const mesh = SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+  createPiso(largura, altura, profundidade, posX, posY, posZ) {
+    const geometry = new THREE.BoxGeometry(largura, altura, profundidade);
+    const material = new THREE.MeshLambertMaterial({ map: shelfTexture });
+    const piso = new THREE.Mesh(geometry, material);
+    piso.position.set(posX, posY, posZ);
+    piso.castShadow = true;
+    return piso;
+  }
 
-    return mesh;
+  addBoxesToPiso(piso, numBoxes) {
+    const spacing = 10; // Espaçamento entre as caixas
+    const boxWidth = 200;
+    const boxHeight = 200; // Altura das caixas
+    const boxDepth = 200; // Profundidade das caixas
+    const totalWidth = boxWidth * numBoxes + spacing * (numBoxes - 1);
+
+    let startX; // Posição inicial X para as caixas
+
+    // Verifica se é o segundo piso
+    if (piso === this.children[3]) { // Se é o segundo piso
+        startX = -(piso.geometry.parameters.width / 2) + totalWidth;
+    } else if (piso === this.children[2]) { // Se é o terceiro piso
+        startX = (piso.geometry.parameters.width / 2) - totalWidth;
+    } else { // Outros pisos, centraliza as caixas
+        startX = -(totalWidth / 2);
+    }
+
+    for (let i = 0; i < numBoxes; i++) {
+        const posX = startX + (boxWidth + spacing) * i;
+        const box = new Box(boxWidth, boxHeight, boxDepth, 15);
+        box.position.set(posX, piso.geometry.parameters.height / 2 + boxHeight / 2, 0);
+        piso.add(box);
+        box.castShadow = true;
+    }
+  }
+}
+
+export class Armazem extends THREE.Object3D {
+  constructor(width, height, depth, thickness) {
+    super();
+
+    // Chão
+    const floor = this.createArmazem(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0, floorTexture);
+    this.add(floor);
+
+    // Parede de trás
+    const backWall = this.createArmazem(width * 2, height, thickness, 0, 0, -depth / 2 + thickness / 2, wallTexture);
+    this.add(backWall);
+
+    // Parede da esquerda
+    const leftWall = this.createArmazem(thickness, height, depth, -width + thickness / 2, 0, 0, wallTexture);
+    this.add(leftWall);
+
+    // Parede da direita
+    const rightWall = this.createArmazem(thickness, height, depth, width - thickness / 2, 0, 0, wallTexture);
+    this.add(rightWall);
+
+    // Teto
+    const ceiling = this.createArmazem(width * 2, thickness, depth, 0, height / 2 - thickness / 2, 0, wallTexture);
+    this.add(ceiling);
+  }
+
+  createArmazem(width, height, depth, posX, posY, posZ, texture) {
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const material = new THREE.MeshLambertMaterial({ map: texture });
+    const panel = new THREE.Mesh(geometry, material);
+    panel.position.set(posX, posY, posZ);
+    panel.receiveShadow = true;
+    return panel;
+  }
+}
+
+export class Robot extends THREE.Object3D {
+  constructor() {
+    super();
+
+    // Caixa principal do robot
+    const bodyGeometry = new THREE.BoxGeometry(200, 400, 100);
+    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = 100;
+    this.add(body);
+
+    // Rodas do robot
+    const wheelGeometry = new THREE.SphereGeometry(25, 40, 40);
+    const wheelMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff });
+    const wheels = [];
+    const wheelPositions = [
+      [-75, -85, 50],
+      [75, -85, 50],
+      [-75, -85, -50],
+      [75, -85, -50]
+    ];
+    wheelPositions.forEach(pos => {
+      const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+      wheel.position.set(...pos);
+      this.add(wheel);
+      wheels.push(wheel);
+    });
+
+    // Braços do robot
+    const armGeometry = new THREE.CylinderGeometry(20, 20, 200, 32);
+    const armMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+    const arm1 = new THREE.Mesh(armGeometry, armMaterial);
+    const arm2 = new THREE.Mesh(armGeometry, armMaterial);
+
+    arm1.position.set(-90, 150, 0);
+    arm2.position.set(90, 150, 0);
+
+    arm1.rotation.z = -Math.PI / 4;
+    arm2.rotation.z = Math.PI / 4;
+
+    this.add(arm1);
+    this.add(arm2);
+
+    // Movimento vai-vém
+    this.movementDirection = 1;
+    this.isActive = false;
+  }
+
+  animate() {
+    const armazemWidth = 5000;
+    const robotWidth = 200;
+    const movementSpeed = 2; // Velocidade de movimento ajustável
+
+    if (this.position.x + this.movementDirection * movementSpeed >= armazemWidth / 2 - robotWidth / 2 ||
+        this.position.x + this.movementDirection * movementSpeed <= -armazemWidth / 2 + robotWidth / 2) {
+        this.movementDirection *= -1; // Inverte a direção quando atinge o limite
+    }
+
+    this.position.x += this.movementDirection * movementSpeed;
   }
 }
