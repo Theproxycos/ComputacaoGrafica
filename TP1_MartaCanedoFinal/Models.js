@@ -61,6 +61,12 @@ export class Estante extends THREE.Object3D {
     piso3.rotation.set(0, 0, -Math.PI / 15); // Rotação do terceiro piso
     this.add(piso3);
     this.addBoxesToPiso(piso3, 2); // Adiciona duas caixas ao terceiro piso
+
+    // Adiciona pernas à estante
+    this.addLegs(largura, altura, profundidade, espessura);
+
+    // Adiciona paredes nos limites dos pisos
+    this.addWallsToEdges(largura, altura, profundidade, espessura);
   }
 
   createPiso(largura, altura, profundidade, posX, posY, posZ) {
@@ -72,6 +78,37 @@ export class Estante extends THREE.Object3D {
     return piso;
   }
 
+  createLeg(altura) {
+    const legGeometry = new THREE.BoxGeometry(30, altura, 30);
+    const legMaterial = new THREE.MeshLambertMaterial({ map: shelfTexture });
+    const leg = new THREE.Mesh(legGeometry, legMaterial);
+    leg.castShadow = true;
+    leg.receiveShadow = true;
+    return leg;
+  }
+
+  addLegs(largura, altura, profundidade, espessura) {
+    const legHeight = 1200; // Aumentar a altura das pernas
+    const legOffsetX = largura / 2 - 25;
+    const legOffsetZ = profundidade / 2 - 25;
+
+    const frontLeftLeg = this.createLeg(legHeight);
+    frontLeftLeg.position.set(-legOffsetX, 880, -legOffsetZ);
+    this.add(frontLeftLeg);
+
+    const frontRightLeg = this.createLeg(legHeight);
+    frontRightLeg.position.set(170, 880, -legOffsetZ);
+    this.add(frontRightLeg);
+
+    const backLeftLeg = this.createLeg(legHeight);
+    backLeftLeg.position.set(-legOffsetX, 880, legOffsetZ);
+    this.add(backLeftLeg);
+
+    const backRightLeg = this.createLeg(legHeight);
+    backRightLeg.position.set(170, 880, legOffsetZ);
+    this.add(backRightLeg);
+  }
+
   addBoxesToPiso(piso, numBoxes) {
     const spacing = 10; // Espaçamento entre as caixas
     const boxWidth = 200;
@@ -81,13 +118,13 @@ export class Estante extends THREE.Object3D {
 
     let startX; // Posição inicial X para as caixas
 
-    // Verifica se é o segundo piso
-    if (piso === this.children[3]) { // Se é o segundo piso
-        startX = -(piso.geometry.parameters.width / 2) + totalWidth;
+    // Verifica os pisos
+    if (piso === this.children[3]) { 
+        startX = (piso.geometry.parameters.width / 2) + (totalWidth + 500) ;
     } else if (piso === this.children[2]) { // Se é o terceiro piso
-        startX = (piso.geometry.parameters.width / 2) - totalWidth;
-    } else { // Outros pisos, centraliza as caixas
-        startX = -(totalWidth / 2);
+        startX = (piso.geometry.parameters.width / 2) - (totalWidth - 80);
+    } else { // Outros pisos, coloca a caixas para a esquerda
+        startX = -(totalWidth / 2) -80;
     }
 
     for (let i = 0; i < numBoxes; i++) {
@@ -97,6 +134,45 @@ export class Estante extends THREE.Object3D {
         piso.add(box);
         box.castShadow = true;
     }
+  }
+
+  // Método para adicionar paredes nos limites dos pisos
+  addWallsToEdges(largura, altura, profundidade, espessura) {
+    const wallHeight = 100; // Altura das paredes
+
+    // Angulo dos pisos em relação ao solo
+    const pisoAngle1 = Math.PI / 15;
+    const pisoAngle2 = Math.PI / 15;
+    const pisoAngle3 = -Math.PI / 15;
+
+    // Parede no lado esquerdo do primeiro piso
+    const leftWall1 = this.createWall(espessura, wallHeight, profundidade);
+    leftWall1.position.set(-600, 365, 0);
+    leftWall1.rotation.set(0, 0, pisoAngle1); // Ajuste da rotação
+    this.add(leftWall1);
+
+    // Parede no lado esquerdo do segundo piso
+    const leftWall2 = this.createWall(espessura, wallHeight, profundidade);
+    leftWall2.position.set(-400, 765, 0);
+    leftWall2.rotation.set(0, 0, pisoAngle2); // Ajuste da rotação
+    this.add(leftWall2);
+
+    // Parede no lado direito do terceiro piso
+    const rightWall3 = this.createWall(espessura, wallHeight, profundidade);
+    rightWall3.position.set(200, 1165, 0);
+    rightWall3.rotation.set(0, 0, pisoAngle3); // Ajuste da rotação
+    this.add(rightWall3);
+}
+
+
+  // Método para criar paredes
+  createWall(largura, altura, profundidade) {
+    const geometry = new THREE.BoxGeometry(largura, altura, profundidade);
+    const material = new THREE.MeshLambertMaterial({ map: shelfTexture });
+    const wall = new THREE.Mesh(geometry, material);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    return wall;
   }
 }
 
@@ -148,7 +224,7 @@ export class Robot extends THREE.Object3D {
 
     // Rodas do robot
     const wheelGeometry = new THREE.SphereGeometry(25, 40, 40);
-    const wheelMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff });
+    const wheelMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
     const wheels = [];
     const wheelPositions = [
       [-75, -85, 50],
@@ -165,7 +241,7 @@ export class Robot extends THREE.Object3D {
 
     // Braços do robot
     const armGeometry = new THREE.CylinderGeometry(20, 20, 200, 32);
-    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff });
+    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
     const arm1 = new THREE.Mesh(armGeometry, armMaterial);
     const arm2 = new THREE.Mesh(armGeometry, armMaterial);
 
