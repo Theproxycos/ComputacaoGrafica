@@ -1,22 +1,31 @@
 # Computer Graphics — TP1
 
-Academic project developed as part of a Computer Graphics course, focused on applying graphical programming concepts and practical development techniques.
-
-## Project Overview
-
-This project explores fundamental concepts of computer graphics through a practical implementation developed for the first assignment (TP1).
+A 3D computer graphics project developed using JavaScript and WebGL, exploring 3D models, textures, and graphical rendering in a web environment.
 
 ## Technologies
 
-- C++
-- Computer Graphics
+- JavaScript
+- WebGL
+- HTML
+- 3D Models and Textures
 
 ## Project Structure
 
-The implementation and associated resources are available in the `TP1_MartaCanedoFinal` directory.
+- `mytable.html` — Main HTML page for the application.
+- `Webgl.js` — WebGL rendering and graphics initialization.
+- `Models.js` — Model-related definitions and operations.
+- `Mygui.js` — Graphical user interface components.
+- `Texturas/` — Textures and visual assets used in the scene.
+
+## Running the Project
+
+1. Clone or download the repository.
+2. Open the project directory.
+3. Run `mytable.html` using a local web server if required by the WebGL resources.
+4. Open the page in a WebGL-compatible browser.
 
 ## Author
 
 Marta Canedo
 
-[GitHub Repository](https://github.com/Theproxycos/ComputacaoGrafica/tree/main/TP1_MartaCanedoFinal)
+[Repository](https://github.com/Theproxycos/ComputacaoGrafica/tree/main/TP1_MartaCanedoFinal)
